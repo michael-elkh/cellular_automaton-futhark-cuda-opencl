@@ -10,3 +10,6 @@ python:
 c:
 	futhark c ac.fut
 	./ac
+
+clean:
+	rm -vf ac.py ac.c ac
