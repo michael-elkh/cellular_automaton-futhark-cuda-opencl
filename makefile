@@ -1,15 +1,15 @@
 cuda:
 	futhark cuda ac.fut
-	./ac
+	@echo 1 | ./ac
 opencl:
 	futhark opencl ac.fut
-	./ac
+	@echo 1 | ./ac
 python:
 	futhark python ac.fut
-	./ac
+	@echo 1 | ./ac
 c:
 	futhark c ac.fut
-	./ac
+	@echo 1 | ./ac
 
 clean:
 	rm -vf ac.py ac.c ac
