@@ -72,7 +72,7 @@ void cast_array_uint32(bool *in, uint32_t *out, uint32_t size)
 /// @return the application status code (0 if success).
 int main()
 {
-	int width = 10000, height = 10000;
+	int width = 1000, height = 1000;
 	struct gfx_context_t *ctxt = gfx_create("Example", width, height);
 	if (!ctxt)
 	{
@@ -90,7 +90,7 @@ int main()
 		render(map, width, height);
 		cast_array_uint32(map, ctxt->pixels, height * width);
 		gfx_present(ctxt);
-		usleep(50000);
+		usleep(20000);
 	}
 	free(map);
 

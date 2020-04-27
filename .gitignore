@@ -1,3 +1,6 @@
 ac.c
 ac.py
 ac
+ac.h
+*.o
+fut_wrap
