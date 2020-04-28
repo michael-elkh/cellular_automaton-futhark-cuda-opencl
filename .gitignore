@@ -3,4 +3,4 @@ ac.py
 ac
 ac.h
 *.o
-fut_wrap
+fut_ui
