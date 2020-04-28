@@ -13,7 +13,7 @@ ac.o: ac.fut
 %.o: %c
 	$(LD) $^ 
 
-AC_gfx.o: AC_gfx.c gfx.c
+AC_gfx.o: UI/AC_gfx.c UI/gfx.c
 	$(LD) $^
 
 fut_wrap: ac.o fut_wrap.o AC_gfx.o gfx.o 
