@@ -18,6 +18,7 @@ void render(bool *pixels, uint32_t width, uint32_t height)
 
     in = futhark_new_bool_2d(f_ctx, pixels, height, width);
     futhark_entry_ac_parity(f_ctx, &out, in);
+    futhark_context_sync(f_ctx);
     futhark_values_bool_2d(f_ctx, out, pixels);
     
     futhark_free_bool_2d(f_ctx, in);
