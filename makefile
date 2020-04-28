@@ -4,8 +4,6 @@ CFLAGS=-std=gnu11 -O3 #-Wall -Wextra -g -fsanitize=leak -fsanitize=undefined
 LIBS=-lSDL2 -lm -lcuda -lnvrtc -lOpenCL
 TARGET=cuda
 
-UI: fut_bench
-
 fut_bench: ac.o fut_wrap.o fut_bench.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LIBS)
 
@@ -26,4 +24,4 @@ python:
 	futhark python --library ac.fut
 
 clean:
-	rm -vf ac.py ac.c ac.h *.o fut_ui
+	rm -vf ac.py ac.c ac.h *.o fut_ui fut_bench

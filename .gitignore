@@ -4,3 +4,4 @@ ac
 ac.h
 *.o
 fut_ui
+fut_bench
