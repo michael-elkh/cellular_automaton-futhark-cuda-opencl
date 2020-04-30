@@ -6,11 +6,11 @@
 #include <time.h>
 
 extern void init_futhark();
-extern void prepare_args(bool *pixels, uint32_t width, uint32_t height);
+extern void prepare_args(uint32_t *pixels, uint32_t width, uint32_t height);
 extern void execute();
 extern void get_result();
 extern void clean_args();
-extern void render(bool *pixels, uint32_t width, uint32_t height);
+extern void render(uint32_t *pixels, uint32_t width, uint32_t height);
 extern void destroy_futhark();
 
 
@@ -35,7 +35,7 @@ void main(int argc, const char *argv[])
         height = atoi(argv[3]);
     }
 
-    bool *src = malloc(width * height * sizeof(bool));
+    uint32_t *src = malloc(width * height * sizeof(uint32_t));
     init_futhark();
     
     struct timespec start, finish;
