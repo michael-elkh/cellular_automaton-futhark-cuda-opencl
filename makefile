@@ -14,7 +14,7 @@ fut_ui: ac.o fut_wrap.o AC_gfx.o gfx.o
 AC_gfx.o: UI/AC_gfx.c UI/gfx.c
 	$(LD) $^
 
-ac.o: ac.fut
+ac.o: ac.fut ac_lib/ac_lib.fut
 	futhark $(TARGET) --library ac.fut
 	$(LD) ac.c
 

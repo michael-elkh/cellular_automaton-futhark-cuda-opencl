@@ -36,14 +36,13 @@ void main(int argc, const char *argv[])
     struct timespec start, finish;
     double seconds_elapsed = 0.0;
 
+    clock_gettime(CLOCK_MONOTONIC, &start);
     for (uint32_t i = 0; i < iteration; i++)
     {
-        clock_gettime(CLOCK_MONOTONIC, &start);
-        render(src, width, height);
-        clock_gettime(CLOCK_MONOTONIC, &finish);
-        seconds_elapsed += (double)(finish.tv_sec - start.tv_sec) + (finish.tv_nsec - start.tv_nsec) / 1.0e9;
+        render(src, width, height);   
     }
-    seconds_elapsed /= iteration;
+    clock_gettime(CLOCK_MONOTONIC, &finish);
+    seconds_elapsed += (double)(finish.tv_sec - start.tv_sec) + (finish.tv_nsec - start.tv_nsec) / 1.0e9;
     printf("Result: %lf\n", seconds_elapsed);
     
     destroy_futhark();
