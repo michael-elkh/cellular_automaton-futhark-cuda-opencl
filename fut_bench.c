@@ -5,9 +5,14 @@
 #include <stdio.h>
 #include <time.h>
 
-void init_futhark();
+extern void init_futhark();
+extern void prepare_args(bool *pixels, uint32_t width, uint32_t height);
+extern void execute();
+extern void get_result();
+extern void clean_args();
 extern void render(bool *pixels, uint32_t width, uint32_t height);
-void destroy_futhark();
+extern void destroy_futhark();
+
 
 void main(int argc, const char *argv[])
 {
@@ -37,14 +42,17 @@ void main(int argc, const char *argv[])
     double seconds_elapsed = 0.0;
 
     clock_gettime(CLOCK_MONOTONIC, &start);
+    prepare_args(src, width, height);
     for (uint32_t i = 0; i < iteration; i++)
     {
-        render(src, width, height);   
+        execute();  
     }
+    get_result();
     clock_gettime(CLOCK_MONOTONIC, &finish);
+    clean_args();
     seconds_elapsed += (double)(finish.tv_sec - start.tv_sec) + (finish.tv_nsec - start.tv_nsec) / 1.0e9;
     printf("Result: %lf\n", seconds_elapsed);
-    
+
     destroy_futhark();
     free(src);
 }
