@@ -20,8 +20,5 @@ let ac_parity_1d [n] (src: [n]u32) (width: i32) (height: i32) : [n]u32 =
         let left_col = if col == 0 then 0 else col - 1
         let right_col = if col == right then right else col + 1
 
-        in src[row*width + left_col] 
-                ^ src[up_row * width + col]
-                ^ src[row * width + right_col]
-                ^ src[down_row * width + col]
+        in (src[row*width + left_col] ^ src[up_row * width + col]) ^ (src[row * width + right_col] ^ src[down_row * width + col])
     ) (iota n)
