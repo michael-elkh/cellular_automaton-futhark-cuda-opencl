@@ -49,7 +49,7 @@ void set_start_state(uint32_t *screen, uint width, uint height, uint value)
 	draw_square(screen, width, sx + (4 * sqs), sy + (4 * sqs), sqs, value);
 }
 
-extern void render(bool *pixels, uint32_t width, uint32_t height);
+extern void render(uint32_t *pixels, uint32_t width, uint32_t height);
 extern void init_futhark();
 extern void destroy_futhark();
 
@@ -83,16 +83,12 @@ int main()
 
 	gfx_clear(ctxt, COLOR_BLUE);
 	set_start_state(ctxt->pixels, width, height, COLOR_RED);
-	bool* map = malloc(height * width);
 	while (gfx_keypressed() != SDLK_ESCAPE)
 	{
-		cast_array_bool(ctxt->pixels, map, height * width);
-		render(map, width, height);
-		cast_array_uint32(map, ctxt->pixels, height * width);
+		render(ctxt->pixels, width, height);
 		gfx_present(ctxt);
 		usleep(20000);
 	}
-	free(map);
 
 	destroy_futhark();
 	gfx_destroy(ctxt);

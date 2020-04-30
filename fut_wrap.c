@@ -5,9 +5,9 @@
 static struct futhark_context_config *f_cfg;
 static struct futhark_context *f_ctx;
 
-static struct futhark_bool_2d *in;
-static struct futhark_bool_2d *out;
-static bool *data;
+static struct futhark_u32_2d *in;
+static struct futhark_u32_2d *out;
+static uint32_t *data;
 
 void init_futhark()
 {
@@ -15,10 +15,11 @@ void init_futhark()
     f_ctx = futhark_context_new(f_cfg);
 }
 
-void prepare_args(bool *pixels, uint32_t width, uint32_t height)
+void prepare_args(uint32_t *pixels, uint32_t width, uint32_t height)
 {
+    
     data = pixels;
-    in = futhark_new_bool_2d(f_ctx, data, height, width);
+    in = futhark_new_u32_2d(f_ctx, data, height, width);
 }
 
 void execute()
@@ -29,16 +30,16 @@ void execute()
 void get_result()
 {
     futhark_context_sync(f_ctx);
-    futhark_values_bool_2d(f_ctx, out, data);
+    futhark_values_u32_2d(f_ctx, out, data);
 }
 
 void clean_args()
 {
-    futhark_free_bool_2d(f_ctx, in);
-    futhark_free_bool_2d(f_ctx, out);
+    futhark_free_u32_2d(f_ctx, in);
+    futhark_free_u32_2d(f_ctx, out);
 }
 
-void render(bool *pixels, uint32_t width, uint32_t height)
+void render(uint32_t *pixels, uint32_t width, uint32_t height)
 {
     prepare_args(pixels, width, height);
     execute();
