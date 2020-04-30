@@ -31,6 +31,7 @@ void prepare_args(uint32_t *pixels, uint32_t width, uint32_t height)
 void execute()
 {
     //futhark_entry_ac_parity(f_ctx, &out, in);
+    if (out1d != NULL) { futhark_free_u32_1d(f_ctx, out1d); }
     futhark_entry_ac_parity_1d(f_ctx, &out1d, in1d, width1d, height1d);
 }
 
