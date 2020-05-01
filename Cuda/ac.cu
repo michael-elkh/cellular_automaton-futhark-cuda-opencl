@@ -1,12 +1,13 @@
 #include <stdio.h>
 #include <time.h>
+#include <string.h>
 
 /* Device */
 __inline__ __device__ int get_index(){
     return blockIdx.x * blockDim.x + threadIdx.x;
 }
 
-__inline__ __device__ int4 get_neighborhood(int index, int width, int height){
+__inline__ __device__ int4 get_neighborhood(int index, int width, int length){
 	int4 neighbors;
 
 	int col = index % width;
@@ -14,18 +15,18 @@ __inline__ __device__ int4 get_neighborhood(int index, int width, int height){
 	//left
 	neighbors.x = col == 0 ? index + (width - 1) : index - 1;
 	//up
-	neighbors.y = index < width ? (width * height) - (width - index) : index - width; 
+	neighbors.y = index < width ? length - (width - index) : index - width; 
 	//right
 	neighbors.z = col == (width - 1) ? index - (width - 1) : index + 1;
 	//down
-	neighbors.w = (index + width) >= (width * height) ? col /* idx mod width */ : index + width;
+	neighbors.w = (index + width) >= length ? col /* idx mod width */ : index + width;
 
 	return neighbors;
 }
 
-__global__ void parity_automaton(uint* src, uint*dst, int width, int height){
+__global__ void parity_automaton(uint* src, uint*dst, int width, int length){
 	int index = get_index();
-	int4 neighbors = get_neighborhood(index, width, height);
+	int4 neighbors = get_neighborhood(index, width, length);
 	
 	dst[index] = src[neighbors.x] ^ src[neighbors.y] ^ src[neighbors.z] ^ src[neighbors.w];
 }
@@ -84,7 +85,7 @@ int main(int argc, const char* argv[])
 	/* insert the launch parameters to launch the kernel properly using blocks and threads */ 
 	uint* tmp;
 	for(int i = 0; i < iteration; i++){
-		parity_automaton<<<(length + (THREADS_PER_BLOCK - 1)) / THREADS_PER_BLOCK, THREADS_PER_BLOCK>>>(d_src, d_dst, 1024, 1024);
+		parity_automaton<<<(length + (THREADS_PER_BLOCK - 1)) / THREADS_PER_BLOCK, THREADS_PER_BLOCK>>>(d_src, d_dst, width, length);
 		// Swap dst and src
 		tmp = d_src;
 		d_src = d_dst;
