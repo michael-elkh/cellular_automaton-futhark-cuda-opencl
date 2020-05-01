@@ -14,7 +14,7 @@ extern void render(uint32_t *pixels, uint32_t width, uint32_t height);
 extern void destroy_futhark();
 
 
-void main(int argc, const char *argv[])
+int main(int argc, const char *argv[])
 {
     uint32_t iteration = 1000, width = 1000, height = 1000;
     if (argc > 1)

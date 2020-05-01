@@ -53,21 +53,6 @@ extern void render(uint32_t *pixels, uint32_t width, uint32_t height);
 extern void init_futhark();
 extern void destroy_futhark();
 
-void cast_array_bool(uint32_t *in, bool *out, uint32_t size)
-{
-	for (uint32_t i = 0; i < size; i++)
-	{
-		out[i] = in[i] == COLOR_RED;
-	}
-}
-void cast_array_uint32(bool *in, uint32_t *out, uint32_t size)
-{
-	for (uint32_t i = 0; i < size; i++)
-	{
-		out[i] = in[i] ? COLOR_RED : COLOR_BLUE;
-	}
-}
-
 /// Program entry point.
 /// @return the application status code (0 if success).
 int main()

@@ -3,7 +3,7 @@ LD=$(CC) -c
 CFLAGS=-std=gnu11 -O3 #-Wall -Wextra -g -fsanitize=leak -fsanitize=undefined
 GUI_LIBS=-lSDL2
 LIBS=-lm -lcuda -lnvrtc -lOpenCL
-TARGET=opencl
+TARGET=cuda
 
 fut_bench: ac.o fut_wrap.o fut_bench.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LIBS)
