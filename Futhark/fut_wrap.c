@@ -9,7 +9,6 @@ static struct futhark_u32_1d *in;
 static struct futhark_u32_1d *out;
 static uint32_t *data;
 static uint32_t f_width;
-static uint32_t f_height;
 
 void init_futhark()
 {
@@ -21,14 +20,13 @@ void prepare_args(uint32_t *pixels, uint32_t width, uint32_t height)
 {
     data = pixels;
     f_width = width;
-    f_height = height;
     in = futhark_new_u32_1d(f_ctx, data, width*height);
 }
 
 void execute()
 {
     if (out != NULL) { futhark_free_u32_1d(f_ctx, out); }
-    futhark_entry_ac_parity(f_ctx, &out, in, f_width, f_height);
+    futhark_entry_ac_parity(f_ctx, &out, in, f_width);
 }
 
 void get_result()
