@@ -1,6 +1,6 @@
 #include <stdint.h>
 #include <stdbool.h>
-#include "ac.h"
+#include "ac_fut.h"
 
 static struct futhark_context_config *f_cfg;
 static struct futhark_context *f_ctx;

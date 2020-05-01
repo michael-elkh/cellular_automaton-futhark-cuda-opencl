@@ -1,7 +1,5 @@
-ac.c
-ac.py
+ac_fut.*
 ac
-ac.h
 *.o
 fut_ui
 fut_bench
