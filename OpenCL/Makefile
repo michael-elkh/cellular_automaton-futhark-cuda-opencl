@@ -1,5 +1,5 @@
-AC: ac.cpp Display.cpp Display.h
-	g++ -std=gnu++11 -O3  ac.cpp -o ac -lOpenCL -lopencv_core -lopencv_highgui -I/usr/local/cuda/include/ -L/usr/local/cuda/targets/x86_64-linux/lib/ -L/usr/local/cuda/lib64/
+ac: ac_opencl.c
+	gcc -std=gnu11 -Wall -Wextra -g -fsanitize=leak -fsanitize=undefined ac_opencl.c -o ac -lOpenCL
 
 clean:
-	rm -rvf AC *.zip
+	rm -vf ac
