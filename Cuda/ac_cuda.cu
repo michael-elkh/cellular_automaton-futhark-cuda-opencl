@@ -25,10 +25,38 @@ __inline__ __device__ int4 get_neighborhood(int index, int width, int length){
 }
 
 __global__ void parity_automaton(uint* src, uint*dst, int width, int length){
+	// Recover the index
 	int index = get_index();
+
+	// get direct neighbors of the pixel
 	int4 neighbors = get_neighborhood(index, width, length);
 	
 	dst[index] = src[neighbors.x] ^ src[neighbors.y] ^ src[neighbors.z] ^ src[neighbors.w];
+}
+
+// cyclic next state function
+__inline__ __device__ uint cyclic(uint center, uint left, uint up, uint right, uint down, uint max){
+	uint k1 = (center + 1) % (max + 1);
+	if (left == k1)
+		return left;
+	if (up == k1)
+		return up;
+	if (right == k1)
+		return right;
+	if (down == k1)
+		return down;
+	return center;
+}
+
+__global__ void cyclic_automaton(uint *src, uint *dst, int width, int length, uint max_val) {
+	// Recover the index
+	int index = get_index();
+
+	// get direct neighbors of the pixel
+	int4 neighbors = get_neighborhood(index, width, length);
+
+	// set the pixel value in destination matrix
+	dst[index] = cyclic(src[index], src[neighbors.x], src[neighbors.y], src[neighbors.z], src[neighbors.w], max_val);
 }
 
 // Host

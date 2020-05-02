@@ -91,17 +91,17 @@ int main(int argc, const char *argv[])
 	double seconds_elapsed = 0.0;
 
 	clock_gettime(CLOCK_MONOTONIC, &start);
-	cl_uint2 img_size = {{width, height}};
-	cl_uint max = 1;
+	cl_int d_width = width;
+	cl_int d_length = length;
 	// Set the arguments of the kernel
-	ret = clSetKernelArg(kernel, 2, sizeof(cl_uint2), (void *)&img_size);
-	ret = clSetKernelArg(kernel, 3, sizeof(cl_uint), (void *)&max);
+	ret = clSetKernelArg(kernel, 2, sizeof(cl_int), (void *)&width);
+	ret = clSetKernelArg(kernel, 3, sizeof(cl_int), (void *)&length);
 
 	cl_mem tmp;
 	for (int i = 0; i < iteration; i++)
 	{
-		ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&d_dst);
-		ret = clSetKernelArg(kernel, 1, sizeof(cl_mem), (void *)&d_src);
+		ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&d_src);
+		ret = clSetKernelArg(kernel, 1, sizeof(cl_mem), (void *)&d_dst);
 		// At the end the final result is in d_src
 		ret = clEnqueueNDRangeKernel(command_queue, kernel, 1, NULL, &global_item_size, &local_item_size, 0, NULL, NULL);
 
@@ -113,7 +113,7 @@ int main(int argc, const char *argv[])
 	// At the end the final result is in d_src
 
 	/* copy src back to host */
-	ret = clEnqueueReadBuffer(command_queue, d_dst, CL_TRUE, 0, size, dst, 0, NULL, NULL);
+	ret = clEnqueueReadBuffer(command_queue, d_src, CL_TRUE, 0, size, src, 0, NULL, NULL);
 	clFinish(command_queue);
 	clock_gettime(CLOCK_MONOTONIC, &finish);
 	seconds_elapsed += (double)(finish.tv_sec - start.tv_sec) + (finish.tv_nsec - start.tv_nsec) / 1.0e9;
