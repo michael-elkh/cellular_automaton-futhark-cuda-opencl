@@ -3,37 +3,59 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include <string.h>
 
 #include "../backend.h"
 
 int main(int argc, const char *argv[])
 {
-    uint32_t iteration = 1000, width = 1000, height = 1000;
-    if (argc > 1)
+    uint32_t iteration, max_value;
+    int32_t width, length;
+    bool parity;
+
+    if (argc < 5 || argc > 6)
     {
-        iteration = atoi(argv[1]);
-    }else{
-        printf("Usage:\n    %s iteration [width] [height]\n", argv[0]);
+        printf("Usage:\n    %s iteration width height automaton [max_value]\n\
+            automaton: parity or cyclic\n\
+            max_value: uint, mandatory for cyclic automation\n", argv[0]);
         exit(1);
     }
-    
-    if(argc > 2){
-        width = atoi(argv[2]);
-        height = width;
-    }
-    else if (argc > 3)
+    else
     {
+        iteration = atoi(argv[1]);
         width = atoi(argv[2]);
-        height = atoi(argv[3]);
+        length = width * atoi(argv[3]);
+
+        if (!strcmp(argv[4], "parity"))
+        {
+            parity = true;
+            max_value = 1;
+        }
+        else if (!strcmp(argv[4], "cyclic") && argc == 6)
+        {
+            parity = false;
+            max_value = atoi(argv[5]);
+        }
+        else
+        {
+            printf("Automaton not implemented\n");
+            exit(1);
+        }
     }
 
-    uint32_t *src = malloc(width * height * sizeof(uint32_t));
-    init();
+    srand(0);
+    uint32_t *src = malloc(length * sizeof(uint32_t));
     
+    for (int32_t i = 0; i < length; i++)
+    {
+        src[i] = rand() % (max_value+1);
+    }
+
+    init();
     struct timespec start, finish;
     double seconds_elapsed = 0.0;
 
-    set_args(true, src, width, width*height, 1);
+    set_args(parity, src, width, length, 1);
     clock_gettime(CLOCK_MONOTONIC, &start);
     iterate(iteration);
     get_result(src);
