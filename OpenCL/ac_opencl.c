@@ -133,6 +133,9 @@ void set_args(bool parity, uint32_t *matrix, int32_t width, int32_t length, uint
 
 	ret = clSetKernelArg(params.kernel, 2, sizeof(cl_int), (void *)&d_width);
 	ret = clSetKernelArg(params.kernel, 3, sizeof(cl_int), (void *)&d_length);
+	if(!parity){
+		ret = clSetKernelArg(params.kernel, 4, sizeof(cl_int), (void*)&d_max_value);
+	}
 }
 void iterate(uint32_t iteration)
 {
