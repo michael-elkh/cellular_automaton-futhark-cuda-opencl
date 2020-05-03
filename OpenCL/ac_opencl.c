@@ -1,135 +1,173 @@
+static const char program[] = "// Recover direct neighborhood in vector of dim 4. The domain is periodic.\n\
+inline int4 get_neighborhood(int index, int width, int length){\n\
+	int4 neighbors;\n\
+\n\
+	int col = index % width;\n\
+	\n\
+	//left\n\
+	neighbors.x = col == 0 ? index + (width - 1) : index - 1;\n\
+	//up\n\
+	neighbors.y = index < width ? length - (width - index) : index - width; \n\
+	//right\n\
+	neighbors.z = col == (width - 1) ? index - (width - 1) : index + 1;\n\
+	//down\n\
+	neighbors.w = (index + width) >= length ? col /* idx mod width */ : index + width;\n\
+\n\
+	return neighbors;\n\
+}\n\
+\n\
+__kernel void parity_automaton(__global uint *src, __global uint *dst, int width, int length) {\n\
+  // Recover the index\n\
+  int index = get_global_id(0);\n\
+\n\
+  // get direct neighbors of the pixel\n\
+  int4 neighbors = get_neighborhood(index, width, length);\n\
+\n\
+  // update pixel in destination matrix\n\
+  dst[index] = src[neighbors.x] ^ src[neighbors.y] ^ src[neighbors.z] ^ src[neighbors.w];\n\
+}\n\
+\n\
+// cyclic next state function\n\
+inline uint cyclic(uint center, uint left, uint up, uint right, uint down, uint max){\n\
+  uint k1 = (center + 1) % (max + 1);\n\
+  if (left == k1)\n\
+    return left;\n\
+  if (up == k1)\n\
+    return up;\n\
+  if (right == k1)\n\
+    return right;\n\
+  if (down == k1)\n\
+    return down;\n\
+  return center;\n\
+}\n\
+\n\
+__kernel void cyclic_automaton(__global uint *src, __global uint *dst, int width, int length, uint max_val) {\n\
+  // Recover the index\n\
+  int index = get_global_id(0);\n\
+\n\
+  // get direct neighbors of the pixel\n\
+  int4 neighbors = get_neighborhood(index, width, length);\n\
+\n\
+  // set the pixel value in destination matrix\n\
+  dst[index] = cyclic(src[index], src[neighbors.x], src[neighbors.y], src[neighbors.z], src[neighbors.w], max_val);\n\
+}\n\
+";
+
 // Src : https://www.eriksmistad.no/getting-started-with-opencl-and-gpu-computing/
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 #include <CL/cl.h>
 
-#define MAX_SOURCE_SIZE (0x100000)
+#include "../backend.h"
 #define uint unsigned int
+#define UNUSED(x) ((void)(x))
 
-int main(int argc, const char *argv[])
+typedef struct cl_params
 {
-	int iteration = 1000, width = 1000, height = 1000;
-	if (argc > 1)
-	{
-		iteration = atoi(argv[1]);
-	}
-	else
-	{
-		printf("Usage:\n    %s iteration [width] [height]\n", argv[0]);
-		exit(1);
-	}
-
-	if (argc > 2)
-	{
-		width = atoi(argv[2]);
-		height = width;
-	}
-	else if (argc > 3)
-	{
-		width = atoi(argv[2]);
-		height = atoi(argv[3]);
-	}
-
-	int length = width * height;
-	int size = length * sizeof(uint);
-
-	// Load the kernel source code into the array source_str
-	FILE *fp;
-	char *source_str;
-	size_t source_size;
-
-	fp = fopen("ac.cl", "r");
-	if (!fp)
-	{
-		fprintf(stderr, "Failed to load kernel.\n");
-		exit(1);
-	}
-	source_str = (char *)malloc(MAX_SOURCE_SIZE);
-	source_size = fread(source_str, 1, MAX_SOURCE_SIZE, fp);
-	fclose(fp);
-
-	// Get platform and device information
-	cl_platform_id platform_id = NULL;
-	cl_device_id device_id = NULL;
+	cl_platform_id platform_id;
+	cl_device_id device_id;
 	cl_uint ret_num_devices;
 	cl_uint ret_num_platforms;
-	cl_int ret = clGetPlatformIDs(1, &platform_id, &ret_num_platforms);
-	ret = clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_GPU, 1, &device_id, &ret_num_devices);
+	cl_context context;
+	cl_command_queue command_queue;
+	cl_program program;
+	size_t global_item_size;
+	size_t local_item_size;
+	cl_kernel kernel;
+} cl_params_t;
+
+static cl_params_t params;
+static cl_mem d_src = NULL;
+static cl_mem d_dst = NULL;
+static int32_t d_width = 0;
+static int32_t d_length = 0;
+static bool d_parity = true;
+static uint32_t d_max_value = 0;
+static int32_t size = 0;
+
+void init()
+{
+	cl_int ret = clGetPlatformIDs(1, &params.platform_id, &params.ret_num_platforms);
+	ret = clGetDeviceIDs(params.platform_id, CL_DEVICE_TYPE_GPU, 1, &params.device_id, &params.ret_num_devices);
 
 	// Create an OpenCL context
-	cl_context context = clCreateContext(NULL, 1, &device_id, NULL, NULL, &ret);
+	params.context = clCreateContext(NULL, 1, &params.device_id, NULL, NULL, &ret);
 
 	// Create a command queue
-	cl_command_queue command_queue = clCreateCommandQueue(context, device_id, 0, &ret);
+	params.command_queue = clCreateCommandQueue(params.context, params.device_id, 0, &ret);
+	
+	size_t source_size = sizeof(program);
+	char* cpy = malloc(source_size);
+	strcpy(cpy, program);
+	// Create a program from the kernel source
+	params.program = clCreateProgramWithSource(params.context, 1, (const char**)&cpy, (const size_t *)&source_size, &ret);
+	free(cpy);
+	// Build the program
+	ret = clBuildProgram(params.program, 1, &params.device_id, NULL, NULL, NULL);
+}
+void set_args(bool parity, uint32_t *matrix, int32_t width, int32_t length, uint32_t max_value)
+{
+	d_parity = parity;
+	d_width = width;
+	d_length = length;
+	d_max_value = max_value;
+	size = length * sizeof(*matrix);
+
+	cl_int ret;
 
 	// Create memory buffers on the device for each array
-	cl_mem d_src = clCreateBuffer(context, CL_MEM_READ_WRITE, size, NULL, &ret);
-	cl_mem d_dst = clCreateBuffer(context, CL_MEM_READ_WRITE, size, NULL, &ret);
-
-	uint *src, *dst;
-	src = malloc(size);
-	dst = malloc(size);
+	d_src = clCreateBuffer(params.context, CL_MEM_READ_WRITE, size, NULL, &ret);
+	d_dst = clCreateBuffer(params.context, CL_MEM_READ_WRITE, size, NULL, &ret);
 
 	// Copy the src array to the device buffer d_src
-	ret = clEnqueueWriteBuffer(command_queue, d_src, CL_TRUE, 0, size, src, 0, NULL, NULL);
-
-	// Create a program from the kernel source
-	cl_program program = clCreateProgramWithSource(context, 1, (const char **)&source_str, (const size_t *)&source_size, &ret);
-
-	// Build the program
-	ret = clBuildProgram(program, 1, &device_id, NULL, NULL, NULL);
+	ret = clEnqueueWriteBuffer(params.command_queue, d_src, CL_TRUE, 0, size, matrix, 0, NULL, NULL);
 
 	// Create the OpenCL kernel
-	cl_kernel kernel = clCreateKernel(program, "parity_automaton", &ret);
+	params.kernel = clCreateKernel(params.program, d_parity ? "parity_automaton" : "cyclic_automaton", &ret);
 
 	// Execute the OpenCL kernel on the list
-	size_t global_item_size = ((length / 64) + ((length % 64) > 0)) * 64; // Process the entire lists
-	size_t local_item_size = 64;										  // Divide work items into groups of 64
+	params.global_item_size = ((d_length / 64) + ((d_length % 64) > 0)) * 64; // Process the entire lists
+	params.local_item_size = 64;											  // Divide work items into groups of 64
 
-	struct timespec start, finish;
-	double seconds_elapsed = 0.0;
-
-	clock_gettime(CLOCK_MONOTONIC, &start);
-	cl_int d_width = width;
-	cl_int d_length = length;
-	// Set the arguments of the kernel
-	ret = clSetKernelArg(kernel, 2, sizeof(cl_int), (void *)&width);
-	ret = clSetKernelArg(kernel, 3, sizeof(cl_int), (void *)&length);
+	ret = clSetKernelArg(params.kernel, 2, sizeof(cl_int), (void *)&d_width);
+	ret = clSetKernelArg(params.kernel, 3, sizeof(cl_int), (void *)&d_length);
+}
+void iterate(uint32_t iteration)
+{
+	cl_uint ret;
 
 	cl_mem tmp;
-	for (int i = 0; i < iteration; i++)
+	for (uint32_t i = 0; i < iteration; i++)
 	{
-		ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&d_src);
-		ret = clSetKernelArg(kernel, 1, sizeof(cl_mem), (void *)&d_dst);
+		ret = clSetKernelArg(params.kernel, 0, sizeof(cl_mem), (void *)&d_src);
+		ret = clSetKernelArg(params.kernel, 1, sizeof(cl_mem), (void *)&d_dst);
 		// At the end the final result is in d_src
-		ret = clEnqueueNDRangeKernel(command_queue, kernel, 1, NULL, &global_item_size, &local_item_size, 0, NULL, NULL);
-
+		ret = clEnqueueNDRangeKernel(params.command_queue, params.kernel, 1, NULL, &params.global_item_size, &params.local_item_size, 0, NULL, NULL);
 		// Swap dst and src
 		tmp = d_src;
 		d_src = d_dst;
 		d_dst = tmp;
 	}
 	// At the end the final result is in d_src
-
+	UNUSED(ret);
+}
+void get_result(uint32_t *matrix)
+{
 	/* copy src back to host */
-	ret = clEnqueueReadBuffer(command_queue, d_src, CL_TRUE, 0, size, src, 0, NULL, NULL);
-	clFinish(command_queue);
-	clock_gettime(CLOCK_MONOTONIC, &finish);
-	seconds_elapsed += (double)(finish.tv_sec - start.tv_sec) + (finish.tv_nsec - start.tv_nsec) / 1.0e9;
-	printf("Result: %lf\n", seconds_elapsed);
-
-	// Clean up
-	ret = clFinish(command_queue);
-	ret = clFlush(command_queue);
-	ret = clReleaseKernel(kernel);
-	ret = clReleaseProgram(program);
+	cl_uint ret = clEnqueueReadBuffer(params.command_queue, d_src, CL_TRUE, 0, size, matrix, 0, NULL, NULL);
+	ret = clFlush(params.command_queue);
+	ret = clFinish(params.command_queue);
+	UNUSED(ret);
+}
+void destroy()
+{
+	cl_uint ret = clReleaseKernel(params.kernel);
+	ret = clReleaseProgram(params.program);
 	ret = clReleaseMemObject(d_src);
 	ret = clReleaseMemObject(d_dst);
-	ret = clReleaseCommandQueue(command_queue);
-	ret = clReleaseContext(context);
-	free(source_str);
-	free(src);
-	free(dst);
-	return EXIT_SUCCESS;
+	ret = clReleaseCommandQueue(params.command_queue);
+	ret = clReleaseContext(params.context);
+	UNUSED(ret);
 }

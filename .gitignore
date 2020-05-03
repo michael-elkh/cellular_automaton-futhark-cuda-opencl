@@ -1,5 +1,7 @@
-ac_fut.*
+ac_futhark.c
+ac_futhark.h
 ac
 *.o
 fut_ui
 fut_bench
+.vscode

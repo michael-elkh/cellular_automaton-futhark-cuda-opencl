@@ -54,11 +54,9 @@ entry cyclic_automaton [n] (src: [n]u32) (width: i32) (max_value: u32) : [n]u32 
     ) (iota n)
 
 entry iterate [n] (parity: bool) (iteration: i32) (src: [n]u32) (width: i32) (max_value: u32) : [n]u32 =
-    let res = if parity
-                then
-                    loop dst = src for i < iteration do
-                        parity_automaton dst width
-                else
-                    loop dst = src for i < iteration do
-                        cyclic_automaton dst width max_value
-    in res
+    loop dst = src for i < iteration do
+        if parity
+        then
+            parity_automaton dst width
+        else
+            cyclic_automaton dst width max_value

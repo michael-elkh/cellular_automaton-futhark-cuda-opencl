@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
+#include <stdint.h>
+
+//#include "../backend.h"
 
 /* Device */
 __inline__ __device__ int get_index(){
@@ -62,76 +65,59 @@ __global__ void cyclic_automaton(uint *src, uint *dst, int width, int length, ui
 // Host
 #define THREADS_PER_BLOCK 64
 
-int main(int argc, const char* argv[])
-{
-	int iteration = 1000, width = 1000, height = 1000;
-    if (argc > 1)
-    {
-        iteration = atoi(argv[1]);
-    }else{
-        printf("Usage:\n    %s iteration [width] [height]\n", argv[0]);
-        exit(1);
-    }
-    
-    if(argc > 2){
-        width = atoi(argv[2]);
-        height = width;
-    }
-    else if (argc > 3)
-    {
-        width = atoi(argv[2]);
-        height = atoi(argv[3]);
+static uint *d_src = NULL;
+static uint *d_dst = NULL;
+static int32_t d_width = 0;
+static int32_t d_length = 0;
+static bool d_parity = true;
+static uint32_t d_max_value = 0;
+static int32_t size = 0;
+
+extern "C" {
+	void init(){}
+	void set_args(bool parity, uint32_t *matrix, int32_t width, int32_t length, uint32_t max_value){
+		d_parity = parity;
+		d_width = width;
+		d_length = length;
+		d_max_value = max_value;
+		size = length * sizeof(*matrix);
+		
+		if(d_src){
+			cudaFree(d_src);
+		}
+		if(d_dst){
+			cudaFree(d_dst);
+		}
+		/* allocate space for device copies src and dst */
+		cudaMalloc((void **) &d_src, size);
+		cudaMalloc((void **) &d_dst, size);
+		/* copy src to device */
+		cudaMemcpy(d_src, matrix, size, cudaMemcpyHostToDevice);
 	}
-	
-	int length = width * height;
-
-	uint *src, *dst;
-	uint *d_src, *d_dst;
-	int size = length * sizeof(uint);
-
-	/* allocate space for device copies src and dst */
-	cudaMalloc((void **) &d_src, size);
-	cudaMalloc((void **) &d_dst, size);
-
-	/* allocate space for host copies of src and dst and setup input values */
-	src = (uint *)malloc(size);
-	dst = (uint *)malloc(size);
-
-	for(int i = 0; i < length; i++)
-	{
-		src[i] = i % 2;
+	void iterate(uint32_t iteration){
+		/* launch the kernel on the GPU */
+		/* insert the launch parameters to launch the kernel properly using blocks and threads */ 
+		uint* tmp;
+		for(int i = 0; i < iteration; i++){
+			if(d_parity){
+				parity_automaton<<<(d_length + (THREADS_PER_BLOCK - 1)) / THREADS_PER_BLOCK, THREADS_PER_BLOCK>>>(d_src, d_dst, d_width, d_length);
+			}else{
+				cyclic_automaton<<<(d_length + (THREADS_PER_BLOCK - 1)) / THREADS_PER_BLOCK, THREADS_PER_BLOCK>>>(d_src, d_dst, d_width, d_length, d_max_value);
+			}
+			// Swap dst and src
+			tmp = d_src;
+			d_src = d_dst;
+			d_dst = tmp; 
+		}
+		// At the end the final result is in d_src
 	}
-
-	/* copy src to device */
-	cudaMemcpy(d_src, src, size, cudaMemcpyHostToDevice);
-
-	struct timespec start, finish;
-    double seconds_elapsed = 0.0;
-
-    clock_gettime(CLOCK_MONOTONIC, &start);
-	/* launch the kernel on the GPU */
-	/* insert the launch parameters to launch the kernel properly using blocks and threads */ 
-	uint* tmp;
-	for(int i = 0; i < iteration; i++){
-		parity_automaton<<<(length + (THREADS_PER_BLOCK - 1)) / THREADS_PER_BLOCK, THREADS_PER_BLOCK>>>(d_src, d_dst, width, length);
-		// Swap dst and src
-		tmp = d_src;
-		d_src = d_dst;
-		d_dst = tmp; 
+	void get_result(uint32_t *matrix){
+		/* copy src back to host */
+		cudaMemcpy(matrix, d_src, size, cudaMemcpyDeviceToHost);
 	}
-	// At the end the final result is in d_src
-
-	/* copy src back to host */
-	cudaMemcpy(src, d_src, size, cudaMemcpyDeviceToHost);
-	clock_gettime(CLOCK_MONOTONIC, &finish);
-    seconds_elapsed += (double)(finish.tv_sec - start.tv_sec) + (finish.tv_nsec - start.tv_nsec) / 1.0e9;
-    printf("Result: %lf\n", seconds_elapsed);
-
-	/* clean up */
-	free(src);
-	free(dst);
-	cudaFree(d_src);
-	cudaFree(d_dst);
-	
-	return EXIT_SUCCESS;
+	void destroy(){
+		cudaFree(d_src);
+		cudaFree(d_dst);
+		d_src = d_dst = NULL;
+	}
 }

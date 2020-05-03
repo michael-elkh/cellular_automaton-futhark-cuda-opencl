@@ -37,5 +37,6 @@ extern struct gfx_context_t* gfx_create(char *text, uint width, uint height);
 extern void gfx_destroy(struct gfx_context_t *ctxt);
 extern void gfx_present(struct gfx_context_t *ctxt);
 extern SDL_Keycode gfx_keypressed();
+extern void apply_color_map(uint32_t *pixels, uint32_t *matrix, uint32_t length, uint32_t max_value);
 
 #endif
