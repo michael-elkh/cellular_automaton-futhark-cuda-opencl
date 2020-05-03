@@ -33,7 +33,7 @@ entry parity_automaton [n] (src: [n]u32) (width: i32) : [n]u32 =
     ) (iota n)        
 
 entry cyclic_automaton [n] (src: [n]u32) (width: i32) (max_value: u32) : [n]u32 =
-    map (\idx ->
+    unsafe map (\idx ->
         let neighbors : [4]u32 = unsafe map (\neighbor -> src[neighbor]) (unsafe get_neighborhood idx n width)
 
         let k1 : u32 = (src[idx] + 1) % (max_value + 1)
