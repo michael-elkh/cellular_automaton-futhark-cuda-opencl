@@ -38,4 +38,4 @@ cuda_bench: Cuda/ac_cuda.o Interface/bench.o
 	$(CC) -c $(CFLAGS) $^
 
 clean:
-	rm -vf *.o *_ui *_bench 
+	rm -vf *.o *_ui *_bench Futhark/ac_futhark.h Futhark/ac_futhark.c
