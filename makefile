@@ -13,7 +13,7 @@ benchs: futhark_bench opencl_bench cuda_bench
 futhark_ui: Futhark/ac_futhark.o Futhark/futhark_wrap.o Interface/gfx/gfx.o Interface/visual.o
 	$(CC) $(CFLAGS) $(notdir $^) -o $@ -lm -lcuda -lcudart -lnvrtc -lOpenCL -lSDL2
 
-futhark_bench: OpenCL/ac_opencl.o Interface/bench.o
+futhark_bench: Futhark/ac_futhark.o Futhark/futhark_wrap.o Interface/bench.o
 	$(CC) $(CFLAGS) $(notdir $^) -o $@ -lm -lcuda -lcudart -lnvrtc -lOpenCL
 
 opencl_ui: OpenCL/ac_opencl.o Interface/gfx/gfx.o Interface/visual.o

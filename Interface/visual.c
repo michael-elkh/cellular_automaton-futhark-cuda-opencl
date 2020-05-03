@@ -76,7 +76,7 @@ int main(int argc, const char *argv[])
 	{
 		printf("Usage:\n    %s iteration width height automaton [max_value]\n\
             automaton: parity or cyclic\n\
-            max_value: uint, mandatory for cyclic automation\n",
+            max_value: uint, mandatory for cyclic automation, ignored for parity\n",
 			   argv[0]);
 		exit(1);
 	}

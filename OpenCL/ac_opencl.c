@@ -63,6 +63,7 @@ __kernel void cyclic_automaton(__global uint *src, __global uint *dst, int width
 #include "../backend.h"
 #define uint unsigned int
 #define UNUSED(x) ((void)(x))
+#define LOCAL_GROUP_SIZE 64
 
 typedef struct cl_params
 {
@@ -128,8 +129,8 @@ void set_args(bool parity, uint32_t *matrix, int32_t width, int32_t length, uint
 	params.kernel = clCreateKernel(params.program, d_parity ? "parity_automaton" : "cyclic_automaton", &ret);
 
 	// Execute the OpenCL kernel on the list
-	params.global_item_size = ((d_length / 64) + ((d_length % 64) > 0)) * 64; // Process the entire lists
-	params.local_item_size = 64;											  // Divide work items into groups of 64
+	params.global_item_size = ((d_length / LOCAL_GROUP_SIZE) + ((d_length % LOCAL_GROUP_SIZE) > 0)) * LOCAL_GROUP_SIZE; // Process the entire lists
+	params.local_item_size = LOCAL_GROUP_SIZE;										  // Divide work items into groups of 64
 
 	ret = clSetKernelArg(params.kernel, 2, sizeof(cl_int), (void *)&d_width);
 	ret = clSetKernelArg(params.kernel, 3, sizeof(cl_int), (void *)&d_length);
