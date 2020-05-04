@@ -1,29 +1,39 @@
 CC=gcc
 NVCC=nvcc
 CFLAGS=-std=gnu11 -O3 #-Wall -Wextra -g -fsanitize=leak -fsanitize=undefined
+GFX_LIB=-lSDL2
+
 ifeq ($(TARGET),)
 TARGET=cuda
 endif
 
+
+LIBS=-lm
+ifeq ($(TARGET),cuda)
+LIBS+=-lcuda -lcudart -lnvrtc
+else ifeq ($(TARGET),opencl)
+LIBS+=-lOpenCL 
+endif
+
 all: uis benchs
 
-uis: futhark_ui opencl_ui cuda_ui
-benchs: futhark_bench opencl_bench cuda_bench
+uis: futhark_$(TARGET)_ui $(TARGET)_ui
+benchs: futhark_$(TARGET)_bench $(TARGET)_bench
 
-futhark_ui: Futhark/ac_futhark.o Futhark/futhark_wrap.o Interface/gfx/gfx.o Interface/visual.o
-	$(CC) $(CFLAGS) $(notdir $^) -o $@ -lm -lcuda -lcudart -lnvrtc -lOpenCL -lSDL2
+futhark_$(TARGET)_ui: Futhark/ac_futhark.o Futhark/futhark_wrap.o Interface/gfx/gfx.o Interface/visual.o
+	$(CC) $(CFLAGS) $(notdir $^) -o $@ $(LIBS) $(GFX_LIB)
 
-futhark_bench: Futhark/ac_futhark.o Futhark/futhark_wrap.o Interface/bench.o
-	$(CC) $(CFLAGS) $(notdir $^) -o $@ -lm -lcuda -lcudart -lnvrtc -lOpenCL
+futhark_$(TARGET)_bench: Futhark/ac_futhark.o Futhark/futhark_wrap.o Interface/bench.o
+	$(CC) $(CFLAGS) $(notdir $^) -o $@ $(LIBS)
 
 opencl_ui: OpenCL/ac_opencl.o Interface/gfx/gfx.o Interface/visual.o
-	$(CC) $(CFLAGS) $(notdir $^) -o $@ -lSDL2 -lOpenCL
+	$(CC) $(CFLAGS) $(notdir $^) -o $@ $(LIBS) $(GFX_LIB)
 
 opencl_bench: OpenCL/ac_opencl.o Interface/bench.o
 	$(CC) $(CFLAGS) $(notdir $^) -o $@ -lOpenCL
 
 cuda_ui: Cuda/ac_cuda.o Interface/gfx/gfx.o Interface/visual.o
-	$(NVCC) $(notdir $^) -o $@ -lSDL2
+	$(NVCC) $(notdir $^) -o $@ $(GFX_LIB)
 
 cuda_bench: Cuda/ac_cuda.o Interface/bench.o
 	$(NVCC) $(notdir $^) -o $@

@@ -3,7 +3,7 @@ from os import sys
 from matplotlib import pyplot
 import subprocess
 
-ITERATIONS=5000
+ITERATIONS=10000
 MAX_VALUE=16
 
 def panic(message:str):
