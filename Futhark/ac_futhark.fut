@@ -27,34 +27,23 @@ let get_neighborhood (idx: i32) (length: i32) (width: i32) : [4]i32 =
 
     in [left, up, right, down]
 
-entry parity_automaton [n] (src: [n]u32) (width: i32) : [n]u32 =
-    unsafe map (\idx ->
-        unsafe reduce (^) 0 (unsafe map (\neighbor -> src[neighbor]) (unsafe get_neighborhood idx n width))
+let parity_automaton [n] (src: [n]u32) (width: i32) : [n]u32 =
+    map (\idx ->
+        reduce (^) 0 (map (\neighbor -> src[neighbor]) (get_neighborhood idx n width))
     ) (iota n)        
 
-entry cyclic_automaton [n] (src: [n]u32) (width: i32) (max_value: u32) : [n]u32 =
-    unsafe map (\idx ->
-        let neighbors : [4]u32 = unsafe map (\neighbor -> src[neighbor]) (unsafe get_neighborhood idx n width)
-
+let cyclic_automaton [n] (src: [n]u32) (width: i32) (max_value: u32) : [n]u32 =
+    map (\idx ->
         let k1 : u32 = (src[idx] + 1) % (max_value + 1)
-        in  if k1 == neighbors[0]
+        in  if any (k1==) (map (\neighbor -> src[neighbor]) (get_neighborhood idx n width))
             then
-                neighbors[0]
-            else if k1 == neighbors[1]
-            then
-                neighbors[1]
-            else if k1 == neighbors[2]
-            then
-                neighbors[2]
-            else if k1 == neighbors[3]
-            then
-                neighbors[3]
+                k1
             else
                 src[idx]
     ) (iota n)
 
 entry iterate [n] (parity: bool) (iteration: i32) (src: [n]u32) (width: i32) (max_value: u32) : [n]u32 =
-    loop dst = src for i < iteration do
+    loop dst = src for _i < iteration do
         if parity
         then
             parity_automaton dst width
