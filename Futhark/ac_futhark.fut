@@ -1,4 +1,4 @@
-let get_neighborhood [n] (src: [n]u32) (idx: i32) (width: i32): [4]u32 = 
+let get_neighborhood [n] (src: [n]u32) (idx: i32) (width: i32): (u32, u32, u32, u32) = 
     let col = idx %% width
 
     let left = if col == 0 
@@ -25,17 +25,19 @@ let get_neighborhood [n] (src: [n]u32) (idx: i32) (width: i32): [4]u32 =
                 else 
                     idx + width
 
-    in map (\x -> src[x]) [left, up, right, down]
+    in (src[left], src[up], src[right], src[down])
 
 let parity_automaton [n] (src: [n]u32) (width: i32) : [n]u32 =
     map (\idx ->
-        reduce (\acc neighbor -> acc^neighbor) 0 (get_neighborhood src idx width)
+        let neighbors = get_neighborhood src idx width
+        in neighbors.0 ^ neighbors.1 ^ neighbors.2 ^ neighbors.3
     ) (iota n)        
 
 let cyclic_automaton [n] (src: [n]u32) (width: i32) (max_value: u32) : [n]u32 =
     map (\idx ->
         let k1 : u32 = (src[idx] + 1) % (max_value + 1)
-        in if any (\neighbor -> k1==neighbor) (get_neighborhood src idx width)
+        let neighbors = get_neighborhood src idx width
+        in if k1 == neighbors.0 || k1 == neighbors.1 || k1 == neighbors.2 || k1 == neighbors.3
             then
                 k1
             else
