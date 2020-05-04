@@ -40,15 +40,7 @@ __global__ void parity_automaton(uint* src, uint*dst, int width, int length){
 // cyclic next state function
 __inline__ __device__ uint cyclic(uint center, uint left, uint up, uint right, uint down, uint max){
 	uint k1 = (center + 1) % (max + 1);
-	if (left == k1)
-		return left;
-	if (up == k1)
-		return up;
-	if (right == k1)
-		return right;
-	if (down == k1)
-		return down;
-	return center;
+	return (left == k1) || (up == k1) || (right == k1) || (down == k1) ? k1 : center;
 }
 
 __global__ void cyclic_automaton(uint *src, uint *dst, int width, int length, uint max_val) {

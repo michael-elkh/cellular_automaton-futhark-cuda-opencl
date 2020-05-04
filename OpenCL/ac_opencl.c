@@ -30,15 +30,7 @@ __kernel void parity_automaton(__global uint *src, __global uint *dst, int width
 // cyclic next state function\n\
 inline uint cyclic(uint center, uint left, uint up, uint right, uint down, uint max){\n\
   uint k1 = (center + 1) % (max + 1);\n\
-  if (left == k1)\n\
-    return left;\n\
-  if (up == k1)\n\
-    return up;\n\
-  if (right == k1)\n\
-    return right;\n\
-  if (down == k1)\n\
-    return down;\n\
-  return center;\n\
+  return (left == k1) || (up == k1) || (right == k1) || (down == k1) ? k1 : center;\n\
 }\n\
 \n\
 __kernel void cyclic_automaton(__global uint *src, __global uint *dst, int width, int length, uint max_val) {\n\

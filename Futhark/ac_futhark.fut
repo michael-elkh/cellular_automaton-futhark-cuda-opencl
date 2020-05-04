@@ -34,10 +34,10 @@ let parity_automaton [n] (src: [n]u32) (width: i32) : [n]u32 =
 
 let cyclic_automaton [n] (src: [n]u32) (width: i32) (max_value: u32) : [n]u32 =
     map (\idx ->
-        let k1 : u32 = (src[idx] + 1) % (max_value + 1)
-        in  if any (k1==) (map (\neighbor -> src[neighbor]) (get_neighborhood idx n width))
+        -- Oddly it's faster to do the compute twice than using a var.
+        if any ((src[idx] + 1) % (max_value + 1)==) (map (\neighbor -> src[neighbor]) (get_neighborhood idx n width))
             then
-                k1
+                (src[idx] + 1) % (max_value + 1)
             else
                 src[idx]
     ) (iota n)
