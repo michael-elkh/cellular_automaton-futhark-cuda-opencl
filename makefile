@@ -26,23 +26,17 @@ futhark_$(TARGET)_ui: Futhark/ac_futhark.o Futhark/futhark_wrap.o Interface/gfx/
 futhark_$(TARGET)_bench: Futhark/ac_futhark.o Futhark/futhark_wrap.o Interface/bench.o
 	$(CC) $(CFLAGS) $(notdir $^) -o $@ $(LIBS)
 
-opencl_ui: OpenCL/ac_opencl.o Interface/gfx/gfx.o Interface/visual.o
+$(TARGET)_ui: $(TARGET)/ac_$(TARGET).o Interface/gfx/gfx.o Interface/visual.o
 	$(CC) $(CFLAGS) $(notdir $^) -o $@ $(LIBS) $(GFX_LIB)
 
-opencl_bench: OpenCL/ac_opencl.o Interface/bench.o
+$(TARGET)_bench: $(TARGET)/ac_$(TARGET).o Interface/bench.o
 	$(CC) $(CFLAGS) $(notdir $^) -o $@ -lOpenCL
-
-cuda_ui: Cuda/ac_cuda.o Interface/gfx/gfx.o Interface/visual.o
-	$(NVCC) $(notdir $^) -o $@ $(GFX_LIB)
-
-cuda_bench: Cuda/ac_cuda.o Interface/bench.o
-	$(NVCC) $(notdir $^) -o $@
 
 %.c: %.fut
 	futhark $(TARGET) --library $< -o $(@:%.c=%)
 
 %.o: %.cu
-	$(NVCC) -c $^
+	$(CC) -c $^
 
 %.o: %.c
 	$(CC) -c $(CFLAGS) $^
