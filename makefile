@@ -1,17 +1,17 @@
-CC=gcc
-NVCC=nvcc
-CFLAGS=-std=gnu11 -O3 #-Wall -Wextra -g -fsanitize=leak -fsanitize=undefined
 GFX_LIB=-lSDL2
 
 ifeq ($(TARGET),)
 TARGET=cuda
 endif
 
-
 LIBS=-lm
 ifeq ($(TARGET),cuda)
+CC=nvcc
+CFLAGS=
 LIBS+=-lcuda -lcudart -lnvrtc
 else ifeq ($(TARGET),opencl)
+CC=gcc
+CFLAGS=-std=gnu11 -O3 #-Wall -Wextra -g -fsanitize=leak -fsanitize=undefined
 LIBS+=-lOpenCL 
 endif
 
