@@ -90,6 +90,7 @@ extern "C" {
 		/* launch the kernel on the GPU */
 		/* insert the launch parameters to launch the kernel properly using blocks and threads */ 
 		uint* tmp;
+		#pragma unroll 4
 		for(int i = 0; i < iteration; i++){
 			if(d_parity){
 				parity_automaton<<<(d_length + (THREADS_PER_BLOCK - 1)) / THREADS_PER_BLOCK, THREADS_PER_BLOCK>>>(d_src, d_dst, d_width, d_length);

@@ -135,6 +135,7 @@ void iterate(uint32_t iteration)
 	cl_uint ret;
 
 	cl_mem tmp;
+	#pragma unroll 4
 	for (uint32_t i = 0; i < iteration; i++)
 	{
 		ret = clSetKernelArg(params.kernel, 0, sizeof(cl_mem), (void *)&d_src);

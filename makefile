@@ -7,7 +7,7 @@ endif
 LIBS=-lm
 ifeq ($(TARGET),cuda)
 CC=nvcc
-CFLAGS=
+CFLAGS=-Xptxas -O3
 LIBS+=-lcuda -lcudart -lnvrtc
 else ifeq ($(TARGET),opencl)
 CC=gcc
@@ -36,7 +36,7 @@ $(TARGET)_bench: $(TARGET)/ac_$(TARGET).o Interface/bench.o
 	futhark $(TARGET) --library $< -o $(@:%.c=%)
 
 %.o: %.cu
-	$(CC) -c $^
+	$(CC) $(CFLAGS) -c $^
 
 %.o: %.c
 	$(CC) -c $(CFLAGS) $^
