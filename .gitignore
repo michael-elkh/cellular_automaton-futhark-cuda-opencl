@@ -5,3 +5,5 @@ ac
 .vscode
 *_bench
 *_ui
+*.png
+*.svg

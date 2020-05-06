@@ -20,6 +20,9 @@ all: uis benchs
 uis: futhark_$(TARGET)_ui $(TARGET)_ui
 benchs: futhark_$(TARGET)_bench $(TARGET)_bench
 
+plots: 
+	python3 benchmark.py
+
 futhark_$(TARGET)_ui: Futhark/ac_futhark.o Futhark/futhark_wrap.o Interface/gfx/gfx.o Interface/visual.o
 	$(CC) $(CFLAGS) $(notdir $^) -o $@ $(LIBS) $(GFX_LIB)
 
@@ -42,4 +45,4 @@ $(TARGET)_bench: $(TARGET)/ac_$(TARGET).o Interface/bench.o
 	$(CC) -c $(CFLAGS) $^
 
 clean:
-	rm -vf *.o *_ui *_bench Futhark/ac_futhark.h Futhark/ac_futhark.c
+	rm -vf *.o *_ui *_bench Futhark/ac_futhark.h Futhark/ac_futhark.c *.svg *.png
