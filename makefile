@@ -51,4 +51,4 @@ $(TARGET)_bench: $(TARGET)/ac_$(TARGET).o Interface/bench.o
 	$(CC) -c $(CFLAGS) $^
 
 clean:
-	rm -vf *.o *_ui *_bench Futhark/ac_futhark.h Futhark/ac_futhark.c *.svg *.png
+	rm -rvf *.o *_ui *_bench Futhark/ac_futhark.h Futhark/ac_futhark.c plots
