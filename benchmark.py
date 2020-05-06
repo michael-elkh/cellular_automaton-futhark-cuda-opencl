@@ -5,7 +5,7 @@ import subprocess
 
 ITERATIONS=10000
 MAX_VALUE=16
-ORDERS = [512, 1024, 2048, 4096, 8192]
+ORDERS = [512, 1024, 2048, 4096, 8192, 16384]
 BACKENDS=["cuda", "opencl"]
 
 def panic(message:str):
