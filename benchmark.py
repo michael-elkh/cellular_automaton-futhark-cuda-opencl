@@ -1,5 +1,5 @@
 import numpy as np
-from os import sys, mkdir
+from os import sys, makedirs
 from matplotlib import pyplot as plt
 from matplotlib.pyplot import figure
 import subprocess
@@ -36,7 +36,7 @@ for backend in BACKENDS:
                 Gcells_by_second = (ITERATIONS*order**2)/float_res/1.0e9
                 results[backend][automaton][name].append(Gcells_by_second)
 
-mkdir("plots")
+makedirs("plots", exist_ok=True)
 for backend, measures in results.items():
     for automaton, version in measures.items():
         labels = list(map(str, ORDERS))
