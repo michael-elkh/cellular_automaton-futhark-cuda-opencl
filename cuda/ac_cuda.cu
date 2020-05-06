@@ -55,7 +55,7 @@ __global__ void cyclic_automaton(uint *src, uint *dst, int width, int length, ui
 }
 
 // Host
-#define THREADS_PER_BLOCK 64
+#define THREADS_PER_BLOCK 256
 
 static uint *d_src = NULL;
 static uint *d_dst = NULL;

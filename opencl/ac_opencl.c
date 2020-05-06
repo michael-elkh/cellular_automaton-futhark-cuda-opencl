@@ -55,7 +55,7 @@ __kernel void cyclic_automaton(__global uint *src, __global uint *dst, int width
 #include "../backend.h"
 #define uint unsigned int
 #define UNUSED(x) ((void)(x))
-#define LOCAL_GROUP_SIZE 64
+#define LOCAL_GROUP_SIZE 256
 
 typedef struct cl_params
 {
