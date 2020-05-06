@@ -15,6 +15,8 @@ CFLAGS=-std=gnu11 -O3 #-Wall -Wextra -g -fsanitize=leak -fsanitize=undefined
 LIBS+=-lOpenCL 
 endif
 
+SYNCED=false
+
 all: uis benchs
 
 uis: futhark_$(TARGET)_ui $(TARGET)_ui
@@ -22,6 +24,10 @@ benchs: futhark_$(TARGET)_bench $(TARGET)_bench
 
 plots: 
 	python3 benchmark.py
+
+sync:
+	futhark pkg sync
+	@SYNCED=true
 
 futhark_$(TARGET)_ui: Futhark/ac_futhark.o Futhark/futhark_wrap.o Interface/gfx/gfx.o Interface/visual.o
 	$(CC) $(CFLAGS) $(notdir $^) -o $@ $(LIBS) $(GFX_LIB)
@@ -35,7 +41,7 @@ $(TARGET)_ui: $(TARGET)/ac_$(TARGET).o Interface/gfx/gfx.o Interface/visual.o
 $(TARGET)_bench: $(TARGET)/ac_$(TARGET).o Interface/bench.o
 	$(CC) $(CFLAGS) $(notdir $^) -o $@ -lOpenCL
 
-%.c: %.fut
+%.c: %.fut sync
 	futhark $(TARGET) --library $< -o $(@:%.c=%)
 
 %.o: %.cu
