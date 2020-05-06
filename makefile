@@ -26,7 +26,7 @@ plots:
 	python3 benchmark.py
 
 sync:
-	futhark pkg sync
+	cd Futhark && futhark pkg sync
 	@SYNCED=true
 
 futhark_$(TARGET)_ui: Futhark/ac_futhark.o Futhark/futhark_wrap.o Interface/gfx/gfx.o Interface/visual.o

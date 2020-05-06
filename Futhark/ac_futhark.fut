@@ -1,4 +1,8 @@
-let get_neighborhood [n] (src: [n]u32) (idx: i32) (width: i32): (u32, u32, u32, u32) = 
+import "lib/github.com/athas/vector/vector"
+module vec2 = cat_vector vector_1 vector_1
+module vec4 = cat_vector vec2 vec2
+
+let get_neighborhood [n] (src: [n]u32) (idx: i32) (width: i32) : vec4.vector u32 = 
     let col = idx %% width
 
     let left = if col == 0 
@@ -25,19 +29,17 @@ let get_neighborhood [n] (src: [n]u32) (idx: i32) (width: i32): (u32, u32, u32, 
                 else 
                     idx + width
 
-    in (src[left], src[up], src[right], src[down])
+    in vec4.from_array ([src[left], src[up], src[right], src[down]] :> [vec4.length]u32)
 
 let parity_automaton [n] (src: [n]u32) (width: i32) : [n]u32 =
     map (\idx ->
-        let neighbors = get_neighborhood src idx width
-        in neighbors.0 ^ neighbors.1 ^ neighbors.2 ^ neighbors.3
+        vec4.reduce (^) 0 (get_neighborhood src idx width)
     ) (iota n)        
 
 let cyclic_automaton [n] (src: [n]u32) (width: i32) (max_value: u32) : [n]u32 =
     map (\idx ->
         let k1 : u32 = (src[idx] + 1) % (max_value + 1)
-        let neighbors = get_neighborhood src idx width
-        in if k1 == neighbors.0 || k1 == neighbors.1 || k1 == neighbors.2 || k1 == neighbors.3
+        in if vec4.reduce (||) false (vec4.map (k1==) (get_neighborhood src idx width))
             then
                 k1
             else
